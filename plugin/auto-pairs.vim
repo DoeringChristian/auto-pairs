@@ -157,6 +157,22 @@ func! s:getline()
   return [before, after, afterline]
 endf
 
+
+function! s:pair_level(line, start, end)
+    let j = 0
+    let c = 0
+    let line = a:line
+    while j < strlen(line)
+        if strlen(line) - j >= strlen(a:start) && line[j:j+strlen(a:start)-1] ==# a:start
+            let c += 1
+        elseif strlen(line) - j >= strlen(a:end) && line[j:j+strlen(a:end)-1] ==# a:end
+            let c -= 1
+        endif
+        let j += 1
+    endwhile
+    return c
+endfunction
+
 " split text to two part
 " returns [orig, text_before_open, open]
 func! s:matchend(text, open)
@@ -263,7 +279,7 @@ func! AutoPairsInsert(key)
     if close == ''
       continue
     end
-    if a:key == g:AutoPairsWildClosedPair || opt['mapclose'] && opt['key'] == a:key
+    if (a:key == g:AutoPairsWildClosedPair || opt['mapclose'] && opt['key'] == a:key) && s:pair_level(before . afterline, open, close) <= 0
       " the close pair is in the same line
       let m = matchstr(afterline, '^\v\s*\V'.close)
       if m != ''
